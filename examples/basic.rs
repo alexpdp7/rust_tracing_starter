@@ -1,5 +1,6 @@
 #[tracing::instrument]
 fn instrumented() {
+    std::thread::sleep(std::time::Duration::from_secs(1));
     tracing::error!("error in instrumented function");
 }
 

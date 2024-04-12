@@ -4,5 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+indicatif = { version = "0.17.8", optional = true }
 tracing = "0.1.40"
+tracing-indicatif = { version = "0.3.6", optional = true }
 tracing-subscriber = "0.3.18"
+
+[features]
+indicatif = ["dep:indicatif", "dep:tracing-indicatif"]
