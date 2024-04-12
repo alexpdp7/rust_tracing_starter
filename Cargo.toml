@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+color-eyre = "0.6.3"
+duct = { version = "0.13.7", optional = true }
 indicatif = { version = "0.17.8", optional = true }
 opentelemetry = { version = "0.22.0", optional = true }
 opentelemetry-otlp = { version = "0.15.0", features = ["reqwest-blocking-client", "http-proto"], optional = true }
@@ -16,3 +18,8 @@ tracing-subscriber = "0.3.18"
 [features]
 indicatif = ["dep:indicatif", "dep:tracing-indicatif"]
 opentelemetry = ["dep:opentelemetry", "dep:opentelemetry-otlp", "dep:opentelemetry_sdk", "dep:tracing-opentelemetry"]
+duct = ["dep:duct"]
+
+[[example]]
+name = "duct"
+required-features = ["duct"]

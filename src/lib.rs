@@ -1,6 +1,8 @@
 use tracing_subscriber::prelude::*;
 
-pub fn run<T>(f: impl FnOnce() -> T) -> T {
+pub fn run<T, E>(f: impl FnOnce() -> Result<T, E>) -> color_eyre::eyre::Result<T, E> {
+    color_eyre::install().unwrap();
+
     let mut layers = Vec::new();
 
     #[cfg(not(feature = "indicatif"))]
@@ -40,4 +42,19 @@ pub fn run<T>(f: impl FnOnce() -> T) -> T {
         opentelemetry::global::shutdown_tracer_provider();
         result
     })
+}
+
+#[cfg(feature = "duct")]
+#[tracing::instrument]
+pub fn observe_duct(id: &str, cmd: &[String]) -> std::io::Result<()> {
+    use std::io::BufRead;
+
+    let (program, args) = cmd.split_at(1);
+    for l in
+        std::io::BufReader::new(duct::cmd(&program[0], args).stderr_to_stdout().reader()?).lines()
+    {
+        tracing::info!("{}", l?);
+    }
+
+    Ok(())
 }

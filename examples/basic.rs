@@ -4,12 +4,13 @@ fn instrumented() {
     tracing::error!("error in instrumented function");
 }
 
-fn main() {
+fn main() -> color_eyre::eyre::Result<()> {
     rust_tracing_starter::run(|| {
         tracing::error!("print an error");
         let span = tracing::span!(tracing::Level::ERROR, "example span");
         let _guard = span.enter();
         tracing::error!("error in span");
-        instrumented()
+        instrumented();
+        Ok(())
     })
 }
