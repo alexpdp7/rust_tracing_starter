@@ -9,3 +9,7 @@ Run [`otel-desktop-viewer`](https://github.com/CtrlSpice/otel-desktop-viewer) in
 $ cargo run -F opentelemetry --example basic
 $ cargo run -F indicatif -F opentelemetry --example basic
 ```
+
+```
+$ cargo run -F duct --example duct -- find ~/.config/
+```
