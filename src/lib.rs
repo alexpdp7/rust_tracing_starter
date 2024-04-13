@@ -1,5 +1,8 @@
+#![doc = include_str!("../README.md")]
+
 use tracing_subscriber::prelude::*;
 
+/// Runs `f` with tracing automatically configured.
 pub fn run<T, E>(f: impl FnOnce() -> Result<T, E>) -> color_eyre::eyre::Result<T, E> {
     color_eyre::install().unwrap();
 
@@ -46,6 +49,10 @@ pub fn run<T, E>(f: impl FnOnce() -> Result<T, E>) -> color_eyre::eyre::Result<T
 
 #[cfg(feature = "duct")]
 #[tracing::instrument]
+/// Runs `cmd` using [Duct](https://github.com/oconnor663/duct.rs), adding instrumentation.
+/// Each line of output creates a span.
+///
+/// Warning: in release mode without any features enabled, this adds about one second of runtime for every 50,000 lines of output.
 pub fn observe_duct(id: &str, cmd: &[String]) -> std::io::Result<()> {
     use std::io::BufRead;
 
