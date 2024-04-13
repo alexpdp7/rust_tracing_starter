@@ -71,6 +71,7 @@ pub fn observe_duct(id: &str, cmd: &[String]) -> std::io::Result<()> {
     }
     tracing::dispatcher::get_default(|d| {
         d.exit(&span.id().unwrap());
+        d.try_close(span.id().unwrap());
     });
 
     Ok(())
