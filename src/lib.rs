@@ -50,11 +50,28 @@ pub fn observe_duct(id: &str, cmd: &[String]) -> std::io::Result<()> {
     use std::io::BufRead;
 
     let (program, args) = cmd.split_at(1);
+    let mut span = tracing::info_span!("output", value = tracing::field::Empty);
+    tracing::dispatcher::get_default(|d| {
+        d.enter(&span.id().unwrap());
+    });
     for l in
         std::io::BufReader::new(duct::cmd(&program[0], args).stderr_to_stdout().reader()?).lines()
     {
-        tracing::info!("{}", l?);
+        let l = l?;
+        span.record("value", l.clone());
+        tracing::info!("{}", l);
+        tracing::dispatcher::get_default(|d| {
+            d.exit(&span.id().unwrap());
+            d.try_close(span.id().unwrap());
+        });
+        span = tracing::info_span!("output", value = tracing::field::Empty);
+        tracing::dispatcher::get_default(|d| {
+            d.enter(&span.id().unwrap());
+        });
     }
+    tracing::dispatcher::get_default(|d| {
+        d.exit(&span.id().unwrap());
+    });
 
     Ok(())
 }
