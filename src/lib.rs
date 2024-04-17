@@ -48,7 +48,7 @@ pub fn run<T, E>(f: impl FnOnce() -> Result<T, E>) -> color_eyre::eyre::Result<T
 }
 
 #[cfg(feature = "duct")]
-#[tracing::instrument]
+#[tracing::instrument(err)]
 /// Runs `cmd` using [Duct](https://github.com/oconnor663/duct.rs), adding instrumentation.
 /// Each line of output creates a span.
 ///
@@ -64,22 +64,28 @@ pub fn observe_duct(id: &str, cmd: &[String]) -> std::io::Result<()> {
     for l in
         std::io::BufReader::new(duct::cmd(&program[0], args).stderr_to_stdout().reader()?).lines()
     {
-        let l = l?;
-        span.record("value", l.clone());
-        tracing::info!("{}", l);
-        tracing::dispatcher::get_default(|d| {
-            d.exit(&span.id().unwrap());
-            d.try_close(span.id().unwrap());
-        });
-        span = tracing::info_span!("output", value = tracing::field::Empty);
-        tracing::dispatcher::get_default(|d| {
-            d.enter(&span.id().unwrap());
-        });
+        match l {
+            Ok(l) => {
+                span.record("value", l.clone());
+                tracing::info!("{}", l);
+                tracing::dispatcher::get_default(|d| {
+                    d.exit(&span.id().unwrap());
+                    d.try_close(span.id().unwrap());
+                });
+                span = tracing::info_span!("output", value = tracing::field::Empty);
+                tracing::dispatcher::get_default(|d| {
+                    d.enter(&span.id().unwrap());
+                });
+            }
+            Err(e) => {
+                tracing::dispatcher::get_default(|d| {
+                    d.exit(&span.id().unwrap());
+                    d.try_close(span.id().unwrap());
+                });
+                return Err(e);
+            }
+        }
     }
-    tracing::dispatcher::get_default(|d| {
-        d.exit(&span.id().unwrap());
-        d.try_close(span.id().unwrap());
-    });
 
     Ok(())
 }
